@@ -21,14 +21,16 @@ class memcachedTools
 
     function writeKeysToFile()
     {
-        foreach ( $this->list as $row ) {
+        foreach ($this->list as $row) {
             $value = $this->memcached->get($row['key']);
             $time = time();
-            $data = serialize(array(
-                'key' => $row['key'],
-                'age' => ($row['age'] - $time),
-                'val' => $value
-            ));
+            $data = serialize(
+                array(
+                    'key' => $row['key'],
+                    'age' => ($row['age'] - $time),
+                    'val' => base64_encode($value)
+                )
+            );
             file_put_contents($this->filename, $data . PHP_EOL, $this->fileMode);
         }
     }
@@ -37,12 +39,12 @@ class memcachedTools
     {
         $data = file_get_contents($this->filename);
         $allData = explode("\n", $data);
-        foreach ( $allData as $key ) {
+        foreach ($allData as $key) {
             $keyData = unserialize($key);
-            if ( !isset($keyData['key']) ) {
+            if (!isset($keyData['key'])) {
                 continue;
             }
-            $this->memcached->set($keyData['key'], $keyData['val'], 0, $keyData['age']);
+            $this->memcached->set($keyData['key'], base64_decode($keyData['val']), 0, $keyData['age']);
         }
     }
 
@@ -51,20 +53,20 @@ class memcachedTools
         $allSlabs = $this->memcached->getExtendedStats('slabs');
         $items = $this->memcached->getExtendedStats('items');
 
-        foreach ( $allSlabs as $server => $slabs ) {
-            foreach ( $slabs as $slabId => $slabMeta ) {
-                if ( !is_numeric($slabId) ) {
+        foreach ($allSlabs as $server => $slabs) {
+            foreach ($slabs as $slabId => $slabMeta) {
+                if (!is_numeric($slabId)) {
                     continue;
                 }
 
                 $cdump = $this->memcached->getExtendedStats('cachedump', (int)$slabId, $this->limit);
 
-                foreach ( $cdump as $server => $entries ) {
-                    if ( !$entries ) {
+                foreach ($cdump as $server => $entries) {
+                    if (!$entries) {
                         continue;
                     }
 
-                    foreach ( $entries as $eName => $eData ) {
+                    foreach ($entries as $eName => $eData) {
                         $this->list[$eName] = array(
                             'key'    => $eName,
                             'slabId' => $slabId,
@@ -82,24 +84,24 @@ class memcachedTools
 $host = '127.0.0.1';
 $port = '11211';
 $allowedArgs = array('-h' => 'host', '-p' => 'port', '-op' => 'action');
-foreach ( $allowedArgs as $key => $val ) {
+foreach ($allowedArgs as $key => $val) {
     $id = array_search($key, $argv);
-    if ( $id ) {
+    if ($id) {
         ${$val} = isset($argv[$id + 1]) ? $argv[$id + 1] : false;
     }
 
 }
 $obj = new memcachedTools($host, $port);
 
-switch ( $action ) {
+switch ($action) {
     case 'backup':
         $obj->getAllKeys();
         $obj->writeKeysToFile();
-        echo "Memcached Data has been saved to file :".$obj->filename;
+        echo "Memcached Data has been saved to file :" . $obj->filename;
         break;
     case 'restore':
         $obj->writeKeysToMemcached();
-        echo "Memcached Data has been restore from file: ".$obj->filename;
+        echo "Memcached Data has been restore from file: " . $obj->filename;
 
         break;
     default:
