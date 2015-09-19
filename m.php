@@ -13,7 +13,7 @@ class memcachedTools
     public $list = array();
     public $limit = 10000000000000;
 
-    public function __construct($host = '127.0.0.1', $port = '11211')
+    public function __construct($host = '127.0.0.1', $port = '11211', $file = 'memcacheData.txt')
     {
         $this->memcached = new Memcache();
         $this->memcached->connect($host, $port);
@@ -83,7 +83,7 @@ class memcachedTools
 
 $host = '127.0.0.1';
 $port = '11211';
-$allowedArgs = array('-h' => 'host', '-p' => 'port', '-op' => 'action');
+$allowedArgs = array('-h' => 'host', '-p' => 'port', '-op' => 'action', '-f' => 'file');
 foreach ($allowedArgs as $key => $val) {
     $id = array_search($key, $argv);
     if ($id) {
@@ -91,7 +91,7 @@ foreach ($allowedArgs as $key => $val) {
     }
 
 }
-$obj = new memcachedTools($host, $port);
+$obj = new memcachedTools($host, $port, (isset($file) ? $file : 'memcacheData.txt'));
 
 switch ($action) {
     case 'backup':
@@ -109,7 +109,8 @@ switch ($action) {
 Example Usage : php m.php -h 127.0.0.1 -p 112112 -op restore
 -h : Memcache Host address ( default is 127.0.0.1 )
 -p : Memcache Port ( default is 11211 )
--p : Operation is required !! ( available options is : restore , backup )
+-op : Operation is required !! ( available options is : restore , backup )
+-f : File name (default is memcacheData.txt)
 EOF;
         break;
 
