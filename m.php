@@ -16,42 +16,42 @@ class memcachedTools
     public function __construct($host = '127.0.0.1', $port = '11211')
     {
         $this->memcached = new Memcache();
-		$this->memcached = new Memcache();
-		// First test to see if $host is a comma seperated list
-		if(mb_strpos($host,',')===FALSE) {
-			// Just one server listed so just used that dummy
+	$this->memcached = new Memcache();
+	// First test to see if $host is a comma seperated list
+	if(mb_strpos($host,',')===FALSE) {
+		// Just one server listed so just use that dummy
+		// check if the string contains a colon to seperate the port number
+		if(mb_strpos($host,':')===FALSE) {
+			$host_live = trim($host);
+			//set default port as none was defined
+			$port_live = (isset($port) && !empty($port)) ? (int)$port : 11211;
+		} else {
+			$temp = explode(':', $host);
+			$host_live = trim($temp[0]);
+			$port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
+			// set default port value if it was empty in the defintion
+			$port_live = !empty($port) ? (int)$port : 11211;
+		}
+		$this->memcached->addServer($host_live, $port_live);
+	} else {
+		// Multiple servers assumed in MEMCACHE_HOST because a comma was found
+		$srvs = explode(',', $host);
+		foreach($srvs as $key=>$svr) {
 			// check if the string contains a colon to seperate the port number
-			if(mb_strpos($host,':')===FALSE) {
-				$host_live = trim($host);
+			if(mb_strpos($svr,':')===FALSE) {
+				$host_live = trim($svr);
 				//set default port as none was defined
-				$port_live = (isset($port) && !empty($port)) ? (int)$port : 11211;
+				$port_live = 11211;
 			} else {
-				$temp = explode(':', $host);
+				$temp = explode(':', $svr);
 				$host_live = trim($temp[0]);
 				$port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
 				// set default port value if it was empty in the defintion
 				$port_live = !empty($port) ? (int)$port : 11211;
 			}
 			$this->memcached->addServer($host_live, $port_live);
-		} else {
-			// Multiple servers assumed in MEMCACHE_HOST because a comma was found
-			$srvs = explode(',', $host);
-			foreach($srvs as $key=>$svr) {
-				// check if the string contains a colon to seperate the port number
-				if(mb_strpos($svr,':')===FALSE) {
-					$host_live = trim($svr);
-					//set default port as none was defined
-					$port_live = 11211;
-				} else {
-					$temp = explode(':', $svr);
-					$host_live = trim($temp[0]);
-					$port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
-					// set default port value if it was empty in the defintion
-					$port_live = !empty($port) ? (int)$port : 11211;
-				}
-				$this->memcached->addServer($host_live, $port_live);
-			}
 		}
+	}
     }
 
     function writeKeysToFile()
