@@ -16,7 +16,6 @@ class memcachedTools
     public function __construct($host = '127.0.0.1', $port = '11211')
     {
         $this->memcached = new Memcache();
-	$this->memcached = new Memcache();
 	// First test to see if $host is a comma seperated list
 	if(mb_strpos($host,',')===FALSE) {
 		// Just one server listed so just use that dummy
