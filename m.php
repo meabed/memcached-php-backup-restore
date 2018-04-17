@@ -16,41 +16,41 @@ class memcachedTools
     public function __construct($host = '127.0.0.1', $port = '11211')
     {
         $this->memcached = new Memcache();
-	// First test to see if $host is a comma seperated list
-	if(mb_strpos($host,',')===FALSE) {
-		// Just one server listed so just use that dummy
-		// check if the string contains a colon to seperate the port number
-		if(mb_strpos($host,':')===FALSE) {
-			$host_live = trim($host);
-			//set default port as none was defined
-			$port_live = (isset($port) && !empty($port)) ? (int)$port : 11211;
-		} else {
-			$temp = explode(':', $host);
-			$host_live = trim($temp[0]);
-			$port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
-			// set default port value if it was empty in the defintion
-			$port_live = !empty($port) ? (int)$port : 11211;
-		}
-		$this->memcached->addServer($host_live, $port_live);
-	} else {
-		// Multiple servers assumed in MEMCACHE_HOST because a comma was found
-		$srvs = explode(',', $host);
-		foreach($srvs as $key=>$svr) {
-			// check if the string contains a colon to seperate the port number
-			if(mb_strpos($svr,':')===FALSE) {
-				$host_live = trim($svr);
-				//set default port as none was defined
-				$port_live = 11211;
-			} else {
-				$temp = explode(':', $svr);
-				$host_live = trim($temp[0]);
-				$port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
-				// set default port value if it was empty in the defintion
-				$port_live = !empty($port) ? (int)$port : 11211;
-			}
-			$this->memcached->addServer($host_live, $port_live);
-		}
-	}
+        // First test to see if $host is a comma separated list
+        if (mb_strpos($host, ',') === FALSE) {
+            // Just one server listed so just use that dummy
+            // check if the string contains a colon to separate the port number
+            if (mb_strpos($host, ':') === FALSE) {
+                $hostLive = trim($host);
+                //set default port as none was defined
+                $portLive = (isset($port) && !empty($port)) ? (int)$port : 11211;
+            } else {
+                $temp = explode(':', $host);
+                $hostLive = trim($temp[0]);
+                $port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
+                // set default port value if it was empty in the definition
+                $portLive = !empty($port) ? (int)$port : 11211;
+            }
+            $this->memcached->addServer($hostLive, $portLive);
+        } else {
+            // Multiple servers assumed in MEMCACHE_HOST because a comma was found
+            $servers = explode(',', $host);
+            foreach ($servers as $key => $server) {
+                // check if the string contains a colon to separate the port number
+                if (mb_strpos($server, ':') === FALSE) {
+                    $hostLive = trim($server);
+                    //set default port as none was defined
+                    $portLive = 11211;
+                } else {
+                    $temp = explode(':', $server);
+                    $hostLive = trim($temp[0]);
+                    $port = (isset($temp[1]) && !empty($temp[1])) ? trim($temp[1]) : '';
+                    // set default port value if it was empty in the defintion
+                    $portLive = !empty($port) ? (int)$port : 11211;
+                }
+                $this->memcached->addServer($hostLive, $portLive);
+            }
+        }
     }
 
     function writeKeysToFile()
@@ -71,6 +71,9 @@ class memcachedTools
 
     public function writeKeysToMemcached()
     {
+        if (!is_file($this->filename)) {
+            return false;
+        }
         $data = file_get_contents($this->filename);
         $allData = explode("\n", $data);
         foreach ($allData as $key) {
@@ -80,12 +83,12 @@ class memcachedTools
             }
             $this->memcached->set($keyData['key'], base64_decode($keyData['val']), 0, $keyData['age']);
         }
+        return true;
     }
 
     public function getAllKeys()
     {
         $allSlabs = $this->memcached->getExtendedStats('slabs');
-        $items = $this->memcached->getExtendedStats('items');
 
         foreach ($allSlabs as $server => $slabs) {
             foreach ($slabs as $slabId => $slabMeta) {
@@ -93,19 +96,19 @@ class memcachedTools
                     continue;
                 }
 
-                $cdump = $this->memcached->getExtendedStats('cachedump', (int)$slabId, $this->limit);
+                $cacheDump = $this->memcached->getExtendedStats('cachedump', (int)$slabId, $this->limit);
 
-                foreach ($cdump as $server => $entries) {
+                foreach ($cacheDump as $server => $entries) {
                     if (!$entries) {
                         continue;
                     }
 
                     foreach ($entries as $eName => $eData) {
                         $this->list[$eName] = array(
-                            'key'    => $eName,
+                            'key' => $eName,
                             'slabId' => $slabId,
-                            'size'   => $eData[0],
-                            'age'    => $eData[1]
+                            'size' => $eData[0],
+                            'age' => $eData[1]
                         );
                     }
                 }
@@ -117,18 +120,18 @@ class memcachedTools
 
 $host = '127.0.0.1';
 $port = '11211';
-$allowedArgs = array('-h' => 'host', '-p' => 'port', '-op' => 'action', '-f' => 'file');
-foreach ($allowedArgs as $key => $val) {
+$action = null; // defining this variable for readability only
+$allowedArguments = array('-h' => 'host', '-p' => 'port', '-op' => 'action', '-f' => 'file');
+foreach ($allowedArguments as $key => $value) {
     $id = array_search($key, $argv);
     if ($id) {
-        ${$val} = isset($argv[$id + 1]) ? $argv[$id + 1] : false;
+        ${$value} = isset($argv[$id + 1]) ? $argv[$id + 1] : false;
     }
-
 }
 $obj = new memcachedTools($host, $port);
 
-// get the filename value (if pressent) and allocate to $obj->filename
-if(isset($filename) && trim($filename)!='') {
+// get the filename value (if present) and allocate to $obj->filename
+if (isset($filename) && trim($filename) != '') {
     $obj->filename = trim($filename);
 }
 
@@ -139,16 +142,18 @@ switch ($action) {
         echo "Memcached Data has been saved to file :" . $obj->filename;
         break;
     case 'restore':
-        $retval = $obj->writeKeysToMemcached();
-        if(!$retval) {
+        $restore = $obj->writeKeysToMemcached();
+        if (!$restore) {
             echo "Memcached Data could not be restored: " . $obj->filename . " Not Found\r\n";
         } else {
-            echo "Memcached Data has been restore from file: " . $obj->filename . "\r\n";
+            echo "Memcached Data has been restored from file: " . $obj->filename . "\r\n";
         }
         break;
     default:
         echo <<<EOF
-Example Usage : php m.php -h 127.0.0.1 -p 112112 -op restore
+Example Usage:
+php m.php -h 127.0.0.1 -p 112112 -op backup
+php m.php -h 127.0.0.1 -p 112112 -op restore
 -h : Memcache Host address ( default is 127.0.0.1 )
 -p : Memcache Port ( default is 11211 )
 -op : Operation is required !! ( available options is : restore , backup )
@@ -168,4 +173,3 @@ EOF;
 
 }
 exit;
-
