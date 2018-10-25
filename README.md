@@ -1,13 +1,15 @@
 memcached-php-backup-restore
 ============================
 
-Save / Restore data from Memcache to File and vice versa !
+[![Build Status](https://travis-ci.org/meabed/memcached-php-backup-restore.svg?branch=master)](https://travis-ci.org/meabed/memcached-php-backup-restore)
+[![COMMIT](https://images.microbadger.com/badges/commit/meio/go-swap-server.svg)](https://microbadger.com/images/meio/go-swap-server)
+[![Blog URL](https://img.shields.io/badge/Author-blog-green.svg?style=flat-square)](https://meabed.com)
+
+Backup/Restore memcached data to file and vice-versa!
 
 I have written this little script in order to Stop/Start/Restart memcache server without sacrificing any cached data.
 
 Now I can dump all memcache data in a file, stop/start/restart memcache server and restore the data from the saved file.
-
-PS : Data saved as array serialized in the file! if you save it as binary data it won't be restored.
 
 ###Usage example
 

@@ -119,58 +119,8 @@ class memcachedTools
     }
 }
 
-$host             = '127.0.0.1';
-$port             = '11211';
-$action           = null; // defining this variable for readability only
-$allowedArguments = ['-h' => 'host', '-p' => 'port', '-op' => 'action', '-f' => 'file'];
-foreach ($allowedArguments as $key => $value) {
-    $id = array_search($key, $argv);
-    if ($id) {
-        ${$value} = isset($argv[$id + 1]) ? $argv[$id + 1] : false;
-    }
-}
-$obj = new memcachedTools($host, $port);
+$instance   = new memcachedTools();
+$oneDayTime = 60 * 60 * 24 * 1;
+$instance->memcached->add('test_key', 'test_value', $oneDayTime);
 
-// get the filename value (if present) and allocate to $obj->filename
-if (isset($filename) && trim($filename) != '') {
-    $obj->filename = trim($filename);
-}
-
-switch ($action) {
-    case 'backup':
-        $obj->getAllKeys();
-        $obj->writeKeysToFile();
-        echo "Memcached Data has been saved to file :" . $obj->filename;
-        break;
-    case 'restore':
-        $restore = $obj->writeKeysToMemcached();
-        if (!$restore) {
-            echo "Memcached Data could not be restored: " . $obj->filename . " Not Found\r\n";
-        } else {
-            echo "Memcached Data has been restored from file: " . $obj->filename . "\r\n";
-        }
-        break;
-    default:
-        echo <<<EOF
-Example Usage:
-php m.php -h 127.0.0.1 -p 112112 -op backup
-php m.php -h 127.0.0.1 -p 112112 -op restore
--h : Memcache Host address ( default is 127.0.0.1 )
--p : Memcache Port ( default is 11211 )
--op : Operation is required !! ( available options is : restore , backup )
--f : File name (default is memcacheData.txt)
-
-NB: The -h address can now contain multiple memcache servers in a 'pool' configuration
-    these can be listed in an comma seperated list and each my optionally have a port
-    number associated with it by seperating with a colon thus: 
-        192.168.1.100:11211,192.168.1.101,192.168.1.100:11212
-    In the above example the are two physical machines but 192.168.1.100 is running two
-    instances of memcached. 
-    The servers MUST be listed here in the same order that is used to write to the pool
-    elsewhere in order for the keys to be correctly retrieved.
-
-EOF;
-        break;
-
-}
-exit;
+var_dump($instance->memcached->get('test_key'));
