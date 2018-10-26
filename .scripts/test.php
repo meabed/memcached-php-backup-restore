@@ -44,4 +44,17 @@ assert($success == 200);
 assert($notStored == 0);
 assert($fail == 0);
 
-echo "SUCCESS";
+echo "SUCCESS Memcached functions\n";
+
+$backupFilePath     = __DIR__ . '/memcachedTestDataFile' . date('U') . '.txt';
+$instance->filename = $backupFilePath;
+$instance->writeKeysToFile();
+
+echo "backup file exist :" . is_file($backupFilePath) . "\n";
+
+$totalLines = intval(exec("wc -l '$backupFilePath'"));
+echo "line count in backup file :" . $totalLines . "\n";
+assert(is_file($backupFilePath) == true);
+assert($totalLines == 200);
+
+echo "SUCCESS Memcached backup file\n";
