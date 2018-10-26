@@ -24,10 +24,10 @@ class memcachedTools
 
     public function __construct($host = '127.0.0.1:11211')
     {
-        $this->memcached = new Memcached('tools_id');
-        $this->memcached->setOption(Memcached::OPT_TCP_KEEPALIVE, 200);
-        $this->memcached->setOption(Memcached::OPT_TCP_NODELAY, true);
-        $this->memcached->setOption(Memcached::OPT_NO_BLOCK, true);
+        $this->memcached = new Memcached();
+        // $this->memcached->setOption(Memcached::OPT_TCP_KEEPALIVE, 200);
+        // $this->memcached->setOption(Memcached::OPT_TCP_NODELAY, true);
+        // $this->memcached->setOption(Memcached::OPT_NO_BLOCK, true);
 
         $hostList = explode(',', $host);
         foreach ($hostList as $host) {
