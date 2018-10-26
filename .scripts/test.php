@@ -14,6 +14,9 @@ $success   = 0;
 $notStored = 0;
 $fail      = 0;
 
+$instance->memcached->set('image_1', file_get_contents(__DIR__ . '/bing_file.png'), $oneDayTime);
+$img = $instance->memcached->get('image_1');
+
 for ($i = 0; $i < 200; $i++) {
     $k = md5($keyPrefix . $i . rand());
     $r = $instance->memcached->set($k, 'test_' . rand(), $oneDayTime);
@@ -27,7 +30,7 @@ for ($i = 0; $i < 200; $i++) {
     }
 }
 
-sleep(2);
+sleep(6);
 
 $slabs = $instance->getSlabs();
 $keys  = $instance->getAllKeys();
@@ -39,12 +42,15 @@ echo "fail count " . $fail . "\n";
 echo "slabs count " . count($slabs) . "\n";
 echo "key count " . count($keys) . "\n";
 
-assert(count($keys) == 200);
+assert(count($keys) == 201);
 assert($success == 200);
 assert($notStored == 0);
 assert($fail == 0);
 
 echo "SUCCESS Memcached functions\n";
+
+echo "SUCCESS Binary image files\n";
+assert(strlen($img) > 10);
 
 $backupFilePath     = __DIR__ . '/memcachedTestDataFile' . date('U') . '.txt';
 $instance->filename = $backupFilePath;
@@ -55,6 +61,6 @@ echo "backup file exist :" . is_file($backupFilePath) . "\n";
 $totalLines = intval(exec("wc -l '$backupFilePath'"));
 echo "line count in backup file :" . $totalLines . "\n";
 assert(is_file($backupFilePath) == true);
-assert($totalLines == 200);
+assert($totalLines == 201);
 
 echo "SUCCESS Memcached backup file\n";
