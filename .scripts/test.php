@@ -14,7 +14,8 @@ $success   = 0;
 $notStored = 0;
 $fail      = 0;
 
-$instance->memcached->set('image_1', file_get_contents(__DIR__ . '/bing_file.png'), $oneDayTime);
+$originalBinContent = file_get_contents(__DIR__ . '/bin_file.png');
+$instance->memcached->set('image_1', $originalBinContent, $oneDayTime);
 $img = $instance->memcached->get('image_1');
 
 for ($i = 0; $i < 200; $i++) {
@@ -64,3 +65,21 @@ assert(is_file($backupFilePath) == true);
 assert($totalLines == 201);
 
 echo "SUCCESS Memcached backup file\n";
+
+$data  = file_get_contents($backupFilePath);
+$lines = explode("\n", $data);
+$json  = [];
+foreach ($lines as $line) {
+    if (substr($line, 0, 16) == '{"key":"image_1"') {
+        $jsonArr = json_decode($line, true);
+    }
+}
+
+$decodedContent = base64_decode($jsonArr['val']);
+
+file_put_contents(__DIR__ . '/bin_file_memcache_data.png', $decodedContent);
+echo "SUCCESS Memcached image restored from backup file\n";
+
+assert($originalBinContent == $decodedContent);
+
+echo "SUCCESS\n";
